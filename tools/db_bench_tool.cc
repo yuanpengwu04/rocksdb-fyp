@@ -736,6 +736,10 @@ DEFINE_int64(prepopulate_block_cache, 0,
              "Pre-populate hot/warm blocks in block cache. 0 to disable and 1 "
              "to insert during flush");
 
+DEFINE_bool(warm_compaction_output, false,
+            "Prepopulate hot data blocks into the block cache during "
+            "compaction when their cache hit ratio exceeds 50%%.");
+
 DEFINE_uint32(uncache_aggressiveness,
               ROCKSDB_NAMESPACE::ColumnFamilyOptions().uncache_aggressiveness,
               "Aggressiveness of erasing cache entries that are likely "
@@ -4667,6 +4671,8 @@ class Benchmark {
           fprintf(stderr, "Unknown prepopulate block cache mode\n");
       }
       block_based_options.prepopulate_block_cache = prepopulate_block_cache;
+      block_based_options.warm_compaction_output =
+          FLAGS_warm_compaction_output;
       if (FLAGS_use_data_block_hash_index) {
         block_based_options.data_block_index_type =
             ROCKSDB_NAMESPACE::BlockBasedTableOptions::kDataBlockBinaryAndHash;

@@ -96,8 +96,8 @@ CacheAllocationPtr CopyBufferToHeap(MemoryAllocator* allocator, Slice& buf) {
       const BlockHandle& handle, UnownedPtr<Decompressor> decomp,              \
       CachableEntry<T>* out_parsed_block, GetContext* get_context,             \
       BlockCacheLookupContext* lookup_context, bool for_compaction,            \
-      bool use_cache, bool async_read, bool use_block_cache_for_lookup,
-      bool* is_cache_hit = nullptr) const;                                     \
+      bool use_cache, bool async_read, bool use_block_cache_for_lookup,        \
+      bool* cache_hit_ptr) const;                                              \
   template Status BlockBasedTable::MaybeReadBlockAndLoadToCache<T>(            \
       FilePrefetchBuffer * prefetch_buffer, const ReadOptions& ro,             \
       const BlockHandle& handle, UnownedPtr<Decompressor> decomp,              \
