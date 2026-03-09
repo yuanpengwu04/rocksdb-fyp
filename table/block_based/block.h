@@ -434,6 +434,10 @@ class BlockIter : public InternalIteratorBase<TValue> {
     return static_cast<uint32_t>(value_.data() - data_);
   }
 
+  void SetCacheHit(bool is_cache_hit) { is_cache_hit_ = is_cache_hit; }
+
+  bool IsCacheHit() const { return is_cache_hit_; }
+
   void SetCacheHandle(Cache::Handle* handle) { cache_handle_ = handle; }
 
   Cache::Handle* cache_handle() { return cache_handle_; }
@@ -667,6 +671,9 @@ class BlockIter : public InternalIteratorBase<TValue> {
   // PinnableSlices reference the block, they need the cache handle in order
   // to bump up the ref count
   Cache::Handle* cache_handle_;
+
+  // Whether the block is derived from cache hit
+  bool is_cache_hit_ = false;
 
  public:
   // Return the offset in data_ just past the end of the current entry.

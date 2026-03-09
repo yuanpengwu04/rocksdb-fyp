@@ -758,6 +758,19 @@ struct BlockBasedTableOptions {
   //
   // Default: 2
   uint64_t num_file_reads_for_auto_readahead = 2;
+
+  // If true, during compaction, track whether each input key came from a
+  // cache-hit block (hot data). For each output data block, if the majority
+  // of its input bytes were cache hits, the block will be prepopulated into
+  // the block cache after being written. This helps keep frequently accessed
+  // data warm across compactions.
+  //
+  // This parameter can be changed dynamically by
+  // DB::SetOptions({{"block_based_table_factory",
+  //                  "{warm_compaction_output=true;}"}})
+  //
+  // Default: false
+  bool warm_compaction_output = false;
 };
 
 // Table Properties that are specific to block-based table properties.

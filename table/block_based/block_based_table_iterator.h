@@ -196,6 +196,8 @@ class BlockBasedTableIterator : public InternalIteratorBase<Slice> {
            block_iter_points_to_real_block_;
   }
 
+  bool IsCacheHit() const override { return block_iter_.IsCacheHit(); }
+
   void ResetDataIter() {
     if (block_iter_points_to_real_block_) {
       if (pinned_iters_mgr_ != nullptr && pinned_iters_mgr_->PinningEnabled()) {

@@ -177,6 +177,9 @@ class InternalIteratorBase : public Cleanable {
   // REQUIRES: Same as for value().
   virtual bool IsValuePinned() const { return false; }
 
+  // If true, this means that the key-value pair is from a cache hit.
+  virtual bool IsCacheHit() const { return false; }
+
   virtual Status GetProperty(std::string /*prop_name*/, std::string* /*prop*/) {
     return Status::NotSupported("");
   }

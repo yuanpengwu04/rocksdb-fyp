@@ -1107,6 +1107,8 @@ class LevelIterator final : public InternalIterator {
            file_iter_.iter() && file_iter_.IsValuePinned();
   }
 
+  bool IsCacheHit() const override { return file_iter_.IsCacheHit(); }
+
   bool IsDeleteRangeSentinelKey() const override { return to_return_sentinel_; }
 
   void SetRangeDelReadSeqno(SequenceNumber read_seq) override {

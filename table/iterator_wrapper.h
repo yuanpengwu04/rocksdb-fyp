@@ -176,6 +176,8 @@ class IteratorWrapperBase {
     return iter_->IsValuePinned();
   }
 
+  bool IsCacheHit() const { return iter_ ? iter_->IsCacheHit() : false; }
+
   bool IsValuePrepared() const { return result_.value_prepared; }
 
   Slice user_key() const {

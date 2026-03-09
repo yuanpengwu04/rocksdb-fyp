@@ -214,6 +214,11 @@ class MergeHelper {
   uint64_t TotalFilterTime() const { return total_filter_time_; }
   bool HasOperator() const { return user_merge_operator_ != nullptr; }
 
+  // Returns true if ALL operands consumed during the last MergeUntil() call
+  // came from cache-hit blocks. Only meaningful when warm_compaction_output_
+  // is true; otherwise always returns true (vacuously).
+  bool AllOperandsCacheHit() const { return all_operands_cache_hit_; }
+
   // If compaction filter returned REMOVE_AND_SKIP_UNTIL, this method will
   // return true and fill *until with the key to which we should skip.
   // If true, keys() and values() are empty.
@@ -257,6 +262,8 @@ class MergeHelper {
   bool has_compaction_filter_skip_until_ = false;
   std::string compaction_filter_value_;
   InternalKey compaction_filter_skip_until_;
+
+  bool all_operands_cache_hit_ = true;
 
   bool IsShuttingDown() {
     // This is a best-effort facility, so memory_order_relaxed is sufficient.

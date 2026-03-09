@@ -931,6 +931,16 @@ struct BlockBasedTableBuilder::Rep {
   // This is used for logging compaction stats.
   uint64_t pre_compression_size = 0;
 
+  // Cache hit tracking for hot-key statistics.
+  // Per-block counters, reset after each data block flush.
+  uint64_t cache_hit_bytes = 0;
+  uint64_t block_data_bytes = 0;
+  bool next_key_is_cache_hit = false;
+  // Set to true in Flush() when a data block's cache hit ratio >= 50%.
+  bool warm_current_data_block = false;
+  // Whether this builder should prepopulate hot compaction output blocks.
+  bool warm_compaction_output = false;
+
   // See class Footer
   uint32_t base_context_checksum;
 
@@ -1206,6 +1216,13 @@ struct BlockBasedTableBuilder::Rep {
         // missing case
         assert(false);
         warm_cache = false;
+    }
+
+    // Enable compaction output warm prepopulation if the option is set
+    // and the table is being created for compaction.
+    if (table_options.warm_compaction_output &&
+        reason == TableFileCreationReason::kCompaction) {
+      warm_compaction_output = true;
     }
 
     const auto compress_dict_build_buffer_charged =
@@ -1487,6 +1504,10 @@ BlockBasedTableBuilder::~BlockBasedTableBuilder() {
   assert(rep_->state == Rep::State::kClosed);
 }
 
+void BlockBasedTableBuilder::SetNextKeyCacheHit(bool is_cache_hit) {
+  rep_->next_key_is_cache_hit = is_cache_hit;
+}
+
 void BlockBasedTableBuilder::Add(const Slice& ikey, const Slice& value) {
   Rep* r = rep_.get();
   assert(rep_->state != Rep::State::kClosed);
@@ -1531,6 +1552,12 @@ void BlockBasedTableBuilder::Add(const Slice& ikey, const Slice& value) {
     }
 
     r->data_block.AddWithLastKey(ikey, value, r->last_ikey);
+    // Accumulate cache-hit bytes if the caller indicated this key was a hit.
+    if (r->next_key_is_cache_hit) {
+      r->cache_hit_bytes += ikey.size() + value.size();
+      r->next_key_is_cache_hit = false;
+    }
+    r->block_data_bytes += ikey.size() + value.size();
     r->last_ikey.assign(ikey.data(), ikey.size());
     assert(!r->last_ikey.empty());
     if (r->state == Rep::State::kBuffered) {
@@ -1594,6 +1621,17 @@ void BlockBasedTableBuilder::Flush(const Slice* first_key_in_next_block) {
     return;
   }
   Slice uncompressed_block_data = r->data_block.Finish();
+
+  // Decide whether to prepopulate this data block into the cache.
+  // A block is considered hot if >= 50% of its input bytes were cache hits.
+  r->warm_current_data_block = false;
+  if (r->warm_compaction_output && r->block_data_bytes > 0) {
+    r->warm_current_data_block =
+        (r->cache_hit_bytes * 2 >= r->block_data_bytes);
+  }
+  // Reset per-block counters for the next data block.
+  r->cache_hit_bytes = 0;
+  r->block_data_bytes = 0;
 
   // NOTE: compression sampling is done here in the same thread as building
   // the uncompressed block because of the requirements to call table
@@ -2129,7 +2167,7 @@ IOStatus BlockBasedTableBuilder::WriteMaybeCompressedBlockImpl(
     }
   }
 
-  if (r->warm_cache) {
+  if (r->warm_cache || (is_data_block && r->warm_current_data_block)) {
     io_s = status_to_io_status(
         InsertBlockInCacheHelper(*uncompressed_block_data, handle, block_type));
     if (UNLIKELY(!io_s.ok())) {

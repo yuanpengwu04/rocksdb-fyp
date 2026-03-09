@@ -96,7 +96,8 @@ CacheAllocationPtr CopyBufferToHeap(MemoryAllocator* allocator, Slice& buf) {
       const BlockHandle& handle, UnownedPtr<Decompressor> decomp,              \
       CachableEntry<T>* out_parsed_block, GetContext* get_context,             \
       BlockCacheLookupContext* lookup_context, bool for_compaction,            \
-      bool use_cache, bool async_read, bool use_block_cache_for_lookup) const; \
+      bool use_cache, bool async_read, bool use_block_cache_for_lookup,
+      bool* is_cache_hit = nullptr) const;                                     \
   template Status BlockBasedTable::MaybeReadBlockAndLoadToCache<T>(            \
       FilePrefetchBuffer * prefetch_buffer, const ReadOptions& ro,             \
       const BlockHandle& handle, UnownedPtr<Decompressor> decomp,              \
@@ -2071,7 +2072,8 @@ WithBlocklikeCheck<Status, TBlocklike> BlockBasedTable::RetrieveBlock(
     const BlockHandle& handle, UnownedPtr<Decompressor> decomp,
     CachableEntry<TBlocklike>* out_parsed_block, GetContext* get_context,
     BlockCacheLookupContext* lookup_context, bool for_compaction,
-    bool use_cache, bool async_read, bool use_block_cache_for_lookup) const {
+    bool use_cache, bool async_read, bool use_block_cache_for_lookup,
+    bool* is_cache_hit) const {
   assert(out_parsed_block);
   assert(out_parsed_block->IsEmpty());
 
@@ -2089,6 +2091,9 @@ WithBlocklikeCheck<Status, TBlocklike> BlockBasedTable::RetrieveBlock(
     if (out_parsed_block->GetValue() != nullptr ||
         out_parsed_block->GetCacheHandle() != nullptr) {
       assert(s.ok());
+      if (is_cache_hit) {
+        *is_cache_hit = true;
+      }
       return s;
     }
   }

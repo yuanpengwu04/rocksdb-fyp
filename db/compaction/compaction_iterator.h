@@ -67,6 +67,7 @@ class SequenceIterWrapper : public InternalIterator {
 
   uint64_t NumItered() const { return num_itered_; }
   bool HasNumItered() const { return has_num_itered_; }
+  bool IsCacheHit() const override { return inner_iter_->IsCacheHit(); }
   bool IsDeleteRangeSentinelKey() const override {
     assert(Valid());
     return inner_iter_->IsDeleteRangeSentinelKey();
@@ -278,6 +279,10 @@ class CompactionIterator {
   bool IsCurrentKeyAlreadyScanned() const {
     assert(Valid());
     return at_next_ || merge_out_iter_.Valid();
+  }
+
+  bool IsCacheHit() const {
+    return is_merge_result_ ? current_is_cache_hit_ : input_.IsCacheHit();
   }
 
   Status InputStatus() const { return input_.status(); }
@@ -521,6 +526,10 @@ class CompactionIterator {
   // Stores whether the current compaction iterator output
   // is a range tombstone start key.
   bool is_range_del_{false};
+
+  // Cache hit tracking for hot-key statistics.
+  bool is_merge_result_{false};
+  bool current_is_cache_hit_{false};
 };
 
 inline bool CompactionIterator::DefinitelyInSnapshot(SequenceNumber seq,

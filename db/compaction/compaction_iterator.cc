@@ -177,6 +177,9 @@ void CompactionIterator::Next() {
       key_ = current_key_.GetInternalKey();
       ikey_.user_key = current_key_.GetUserKey();
       validity_info_.SetValid(ValidContext::kMerge1);
+      // Subsequent merge outputs share the same all-operands-cache-hit status.
+      is_merge_result_ = true;
+      current_is_cache_hit_ = merge_helper_->AllOperandsCacheHit();
     } else {
       if (merge_until_status_.IsMergeInProgress()) {
         // `Status::MergeInProgress()` tells us that the previous `MergeUntil()`
@@ -450,6 +453,8 @@ bool CompactionIterator::InvokeFilterIfNeeded(bool* need_skip,
 void CompactionIterator::NextFromInput() {
   at_next_ = false;
   validity_info_.Invalidate();
+
+  is_merge_result_ = false;
 
   while (!Valid() && input_.Valid() && !IsPausingManualCompaction() &&
          !IsShuttingDown()) {
@@ -1081,6 +1086,9 @@ void CompactionIterator::NextFromInput() {
         key_ = current_key_.GetInternalKey();
         ikey_.user_key = current_key_.GetUserKey();
         validity_info_.SetValid(ValidContext::kMerge2);
+        // For merge output, cache hit = all consumed operands were cache hits.
+        is_merge_result_ = true;
+        current_is_cache_hit_ = merge_helper_->AllOperandsCacheHit();
       } else {
         // all merge operands were filtered out. reset the user key, since the
         // batch consumed by the merge operator should not shadow any keys

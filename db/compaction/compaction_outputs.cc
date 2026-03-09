@@ -420,6 +420,7 @@ Status CompactionOutputs::AddToOutput(
   if (!s.ok()) {
     return s;
   }
+  builder_->SetNextKeyCacheHit(c_iter.IsCacheHit());
   builder_->Add(key, value);
 
   stats_.num_output_records++;

@@ -397,7 +397,8 @@ class BlockBasedTable : public TableReader {
       const BlockHandle& handle, UnownedPtr<Decompressor> decomp,
       CachableEntry<TBlocklike>* block_entry, GetContext* get_context,
       BlockCacheLookupContext* lookup_context, bool for_compaction,
-      bool use_cache, bool async_read, bool use_block_cache_for_lookup) const;
+      bool use_cache, bool async_read, bool use_block_cache_for_lookup,
+      bool* is_cache_hit = nullptr) const;
 
   template <typename TBlocklike>
   WithBlocklikeCheck<void, TBlocklike> SaveLookupContextOrTraceRecord(

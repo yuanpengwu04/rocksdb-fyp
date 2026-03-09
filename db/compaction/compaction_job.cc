@@ -1862,12 +1862,14 @@ void CompactionJob::ProcessKeyValueCompaction(SubcompactionState* sub_compact) {
     return;
   }
 
+
   MergeHelper merge(
       env_, cfd->user_comparator(), cfd->ioptions().merge_operator.get(),
       compaction_filter, db_options_.info_log.get(),
       false /* internal key corruption is expected */,
       job_context_->GetLatestSnapshotSequence(), job_context_->snapshot_checker,
-      compact_->compaction->level(), db_options_.stats);
+      compact_->compaction->level(), db_options_.stats,
+      /*shutting_down=*/nullptr);
   std::unique_ptr<BlobFileBuilder> blob_file_builder;
 
   auto c_iter =

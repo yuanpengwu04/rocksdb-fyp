@@ -52,6 +52,8 @@ class BlockBasedTableBuilder : public TableBuilder {
   // REQUIRES: Either Finish() or Abandon() has been called.
   ~BlockBasedTableBuilder();
 
+  void SetNextKeyCacheHit(bool is_cache_hit) override;
+
   // Add key,value to the table being constructed.
   // REQUIRES: Unless key has type kTypeRangeDeletion, key is after any
   //           previously added non-kTypeRangeDeletion key according to

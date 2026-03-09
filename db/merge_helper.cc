@@ -276,6 +276,7 @@ Status MergeHelper::MergeUntil(InternalIterator* iter,
     assert(ts_sz == full_history_ts_low->size());
   }
   bool first_key = true;
+  all_operands_cache_hit_ = true;
 
   // We need to parse the internal key again as the parsed key is
   // backed by the internal key!
@@ -355,6 +356,10 @@ Status MergeHelper::MergeUntil(InternalIterator* iter,
     }
 
     // At this point we are guaranteed that we need to process this key.
+
+    // Track cache hit status: all operands must be cache hits for the
+    // merged result to be considered a cache hit.
+    all_operands_cache_hit_ &= iter->IsCacheHit();
 
     assert(IsValueType(ikey.type));
     if (ikey.type != kTypeMerge) {

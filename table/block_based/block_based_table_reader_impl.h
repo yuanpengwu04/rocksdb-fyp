@@ -83,10 +83,14 @@ TBlockIter* BlockBasedTable::NewDataBlockIterator(
         decomp = dict.GetValue()->decompressor_.get();
       }
     }
+
+    bool is_cache_hit = false;
     s = RetrieveBlock(
         prefetch_buffer, ro, handle, decomp, &block.As<IterBlocklike>(),
         get_context, lookup_context, for_compaction,
-        /* use_cache */ true, async_read, use_block_cache_for_lookup);
+        /* use_cache */ true, async_read, use_block_cache_for_lookup,
+        &is_cache_hit);
+    iter->SetCacheHit(is_cache_hit);
   }
 
   if (s.IsTryAgain() && async_read) {
@@ -196,6 +200,7 @@ TBlockIter* BlockBasedTable::NewDataBlockIterator(const ReadOptions& ro,
     }
   } else {
     iter->SetCacheHandle(block.GetCacheHandle());
+    iter->SetCacheHit(true);
   }
 
   block.TransferTo(iter);

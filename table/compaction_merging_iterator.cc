@@ -153,6 +153,13 @@ class CompactionMergingIterator : public InternalIterator {
     return false;
   }
 
+  bool IsCacheHit() const override {
+    assert(Valid());
+    return current_ != nullptr && current_->type == HeapItem::ITERATOR
+               ? current_->iter.IsCacheHit()
+               : false;
+  }
+
   bool PrepareValue() override {
     assert(false);
     return false;

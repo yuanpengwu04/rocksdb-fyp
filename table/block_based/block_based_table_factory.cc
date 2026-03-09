@@ -420,6 +420,9 @@ static struct BlockBasedTableTypeInfo {
         {"fail_if_no_udi_on_open",
          {offsetof(struct BlockBasedTableOptions, fail_if_no_udi_on_open),
           OptionType::kBoolean, OptionVerificationType::kNormal}},
+        {"warm_compaction_output",
+         {offsetof(struct BlockBasedTableOptions, warm_compaction_output),
+          OptionType::kBoolean, OptionVerificationType::kNormal}},
     };
   }
 } block_based_table_type_info;
@@ -973,6 +976,9 @@ std::string BlockBasedTableFactory::GetPrintableOptions() const {
   snprintf(buffer, kBufferSize,
            "  num_file_reads_for_auto_readahead: %" PRIu64 "\n",
            table_options_.num_file_reads_for_auto_readahead);
+  ret.append(buffer);
+  snprintf(buffer, kBufferSize, "  warm_compaction_output: %d\n",
+           static_cast<int>(table_options_.warm_compaction_output));
   ret.append(buffer);
   return ret;
 }

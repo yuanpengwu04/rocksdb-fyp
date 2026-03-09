@@ -179,6 +179,11 @@ class TableBuilder {
   // REQUIRES: Either Finish() or Abandon() has been called.
   virtual ~TableBuilder() {}
 
+  // Notify the builder that the next key to be Add()'d came from a cache-hit
+  // block. The builder may use this to accumulate hot-key statistics.
+  // Default implementation is a no-op.
+  virtual void SetNextKeyCacheHit(bool /*is_cache_hit*/) {}
+
   // Add key,value to the table being constructed.
   // REQUIRES: key is after any previously added key according to comparator.
   // REQUIRES: Finish(), Abandon() have not been called
