@@ -193,6 +193,10 @@ class ClippingIterator : public InternalIterator {
     return iter_->IsDeleteRangeSentinelKey();
   }
 
+  bool IsCacheHit() const override {
+    return iter_->IsCacheHit();
+  }
+
  private:
   void UpdateValid() {
     assert(!iter_->Valid() || iter_->status().ok());

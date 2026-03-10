@@ -1625,9 +1625,15 @@ void BlockBasedTableBuilder::Flush(const Slice* first_key_in_next_block) {
   // Decide whether to prepopulate this data block into the cache.
   // A block is considered hot if >= 50% of its input bytes were cache hits.
   r->warm_current_data_block = false;
+  // if (r->warm_compaction_output && r->block_data_bytes > 0) {
+  //   r->warm_current_data_block =
+  //       (r->cache_hit_bytes * 2 >= r->block_data_bytes);
+  // }
+
+  // Warm block only if >= 30% of input bytes were cache hits
   if (r->warm_compaction_output && r->block_data_bytes > 0) {
     r->warm_current_data_block =
-        (r->cache_hit_bytes * 2 >= r->block_data_bytes);
+        (r->cache_hit_bytes * 10 >= r->block_data_bytes * 3);
   }
   // Reset per-block counters for the next data block.
   r->cache_hit_bytes = 0;
